@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - SUPERMARK PAY</title>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <h1>SUPERMARK PAY</h1>
+            </div>
+            
+            <div class="nav-menu" id="navMenu">
+                <a href="/dashboard.html" class="active">Dashboard</a>
+                <a href="#smm">Suntik Sosmed</a>
+                <a href="#nokos">Nokos</a>
+                <a href="#panel">Panel</a>
+                <a href="#history">Riwayat</a>
+            </div>
+
+            <div class="nav-right" id="navRight">
+                <div class="balance-widget" onclick="showDepositModal()">
+                    <i class="fas fa-wallet"></i>
+                    <span class="balance-label">Saldo</span>
+                    <span class="balance-amount" id="balanceAmount">Rp 5.000</span>
+                </div>
+                
+                <div class="profile-dropdown" id="profileDropdown">
+                    <div class="profile-btn" onclick="toggleDropdown()">
+                        <img id="profileAvatar" src="" alt="Profile">
+                    </div>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <div class="dropdown-header">
+                            <img id="dropdownAvatar" src="" alt="Profile">
+                            <div>
+                                <h4 id="profileName">User Name</h4>
+                                <span id="profileEmail">user@email.com</span>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" onclick="showProfile()">
+                            <i class="fas fa-user"></i> Profil Saya
+                        </a>
+                        <a href="#" class="dropdown-item" onclick="showSettings()">
+                            <i class="fas fa-cog"></i> Pengaturan
+                        </a>
+                        <a href="#" class="dropdown-item" onclick="showTransactions()">
+                            <i class="fas fa-history"></i> Riwayat
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> Keluar
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="dashboard-container">
+        <!-- Welcome Banner -->
+        <div class="welcome-banner">
+            <div class="welcome-text">
+                <h2>Selamat Datang, <span id="welcomeName">User</span>! 👋</h2>
+                <p>Senang melihat Anda kembali. Siap untuk order hari ini?</p>
+            </div>
+            <div class="quick-stats">
+                <div class="stat-card">
+                    <i class="fas fa-shopping-bag"></i>
+                    <div>
+                        <span class="stat-value" id="totalOrders">0</span>
+                        <span class="stat-label">Total Order</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <span class="stat-value" id="successOrders">0</span>
+                        <span class="stat-label">Berhasil</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Tabs -->
+        <div class="service-tabs">
+            <button class="tab-btn active" onclick="switchTab('smm')">Suntik Sosmed</button>
+            <button class="tab-btn" onclick="switchTab('nokos')">Nomor Virtual</button>
+            <button class="tab-btn" onclick="switchTab('panel')">Admin Panel</button>
+        </div>
+
+        <!-- SMM Section -->
+        <div id="smmSection" class="tab-section active">
+            <div class="section-header">
+                <h3><i class="fas fa-th-large"></i> Kategori Layanan</h3>
+            </div>
+            
+            <div class="category-grid" id="smmCategories"></div>
+            
+            <div class="section-header" style="margin-top: 2rem;">
+                <h3><i class="fas fa-fire"></i> Layanan Populer</h3>
+            </div>
+            
+            <div class="products-grid" id="smmProducts"></div>
+        </div>
+
+        <!-- Nokos Section -->
+        <div id="nokosSection" class="tab-section">
+            <div class="section-header">
+                <h3><i class="fas fa-globe"></i> Pilih Layanan Nokos</h3>
+            </div>
+            
+            <div class="category-grid" id="nokosServices"></div>
+            
+            <div id="countriesSection" style="display: none;">
+                <div class="section-header" style="margin-top: 2rem;">
+                    <h3><i class="fas fa-flag"></i> Pilih Negara</h3>
+                </div>
+                <div class="countries-grid" id="countriesGrid"></div>
+            </div>
+            
+            <div id="numbersSection" style="display: none;">
+                <div class="section-header" style="margin-top: 2rem;">
+                    <h3><i class="fas fa-phone-alt"></i> Nomor Tersedia</h3>
+                </div>
+                <div class="numbers-grid" id="numbersGrid"></div>
+            </div>
+        </div>
+
+        <!-- Panel Section -->
+        <div id="panelSection" class="tab-section">
+            <div class="panel-card">
+                <div class="panel-icon">
+                    <i class="fas fa-server"></i>
+                </div>
+                <h3>Admin Panel Pterodactyl</h3>
+                <p>Dapatkan akses admin panel dengan harga terjangkau</p>
+                
+                <div class="panel-features">
+                    <div class="feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Full akses admin</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Bisa create server sendiri</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Support 24/7</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Garansi 30 hari</span>
+                    </div>
+                </div>
+                
+                <div class="panel-price">
+                    <span class="price">Rp 4.000</span>
+                    <span class="original-price">Rp 10.000</span>
+                </div>
+                
+                <button class="btn-panel" onclick="showPanelForm()">Beli Panel</button>
+            </div>
+            
+            <div id="panelForm" class="panel-form" style="display: none;">
+                <h4>Form Pembelian Panel</h4>
+                
+                <div class="form-group">
+                    <label>Nama Lengkap</label>
+                    <input type="text" id="panelName" class="form-control" placeholder="Masukkan nama lengkap">
+                </div>
+                
+                <div class="form-group">
+                    <label>Username Panel</label>
+                    <input type="text" id="panelUsername" class="form-control" placeholder="Masukkan username">
+                    <small class="form-text">Hanya huruf kecil, angka, dan underscore</small>
+                </div>
+                
+                <div class="total-price">
+                    <span>Total:</span>
+                    <span id="panelTotal">Rp 4.000</span>
+                </div>
+                
+                <div class="form-buttons">
+                    <button class="btn-primary" onclick="processPanelOrder()">Buat Pesanan</button>
+                    <button class="btn-secondary" onclick="hidePanelForm()">Batal</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="section-header" style="margin-top: 3rem;">
+            <h3><i class="fas fa-history"></i> Riwayat Transaksi</h3>
+        </div>
+        
+        <div class="history-list" id="historyList">
+            <div class="empty-history">
+                <i class="fas fa-inbox"></i>
+                <p>Belum ada transaksi</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deposit Modal -->
+    <div class="modal" id="depositModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Deposit Saldo</h3>
+                <button class="close-btn" onclick="closeDepositModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Jumlah Deposit (Min Rp 1.000)</label>
+                    <input type="number" id="depositAmount" class="form-control" placeholder="10000" min="1000">
+                </div>
+                
+                <div id="qrisContainer" style="display: none;">
+                    <div class="qris-wrapper">
+                        <img id="qrisImage" src="" alt="QRIS">
+                        <p>Scan QRIS untuk membayar</p>
+                    </div>
+                    <div class="order-id" id="orderIdDisplay"></div>
+                    <button class="btn-primary" onclick="checkPayment()">Cek Pembayaran</button>
+                </div>
+                
+                <button class="btn-primary" id="createPaymentBtn" onclick="createPayment()">Buat Pembayaran</button>
+                <button class="btn-secondary" onclick="closeDepositModal()">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Modal -->
+    <div class="modal" id="orderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Detail Pemesanan</h3>
+                <button class="close-btn" onclick="closeOrderModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Produk</label>
+                    <input type="text" id="orderProductName" class="form-control" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label>Link Target</label>
+                    <input type="text" id="orderLink" class="form-control" placeholder="https://instagram.com/username">
+                </div>
+                
+                <div class="form-group">
+                    <label>Jumlah</label>
+                    <input type="number" id="orderQuantity" class="form-control" placeholder="100" min="100">
+                </div>
+                
+                <div class="total-price">
+                    <span>Total Harga:</span>
+                    <span id="orderTotal">Rp 0</span>
+                </div>
+                
+                <button class="btn-primary" onclick="processOrder()">Proses Pesanan</button>
+                <button class="btn-secondary" onclick="closeOrderModal()">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal" id="profileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Profil Saya</h3>
+                <button class="close-btn" onclick="closeProfileModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="profile-info">
+                    <div class="profile-avatar-large">
+                        <img id="profileAvatarLarge" src="" alt="Profile">
+                    </div>
+                    
+                    <div class="profile-details">
+                        <div class="detail-item">
+                            <label>Nama Lengkap</label>
+                            <p id="profileFullName"></p>
+                        </div>
+                        <div class="detail-item">
+                            <label>Email</label>
+                            <p id="profileEmailDetail"></p>
+                        </div>
+                        <div class="detail-item">
+                            <label>Username</label>
+                            <p id="profileUsername"></p>
+                        </div>
+                        <div class="detail-item">
+                            <label>ID Pengguna</label>
+                            <p id="profileId"></p>
+                        </div>
+                        <div class="detail-item">
+                            <label>Bergabung Sejak</label>
+                            <p id="profileJoined"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-actions">
+                        <h4>Ganti Avatar</h4>
+                        <div class="avatar-selection-small">
+                            <div class="avatar-option-small" onclick="changeAvatar('cowok1')">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=boy1&gender=male" alt="Cowok 1">
+                            </div>
+                            <div class="avatar-option-small" onclick="changeAvatar('cowok2')">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=boy2&gender=male" alt="Cowok 2">
+                            </div>
+                            <div class="avatar-option-small" onclick="changeAvatar('cowok3')">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=boy3&gender=male" alt="Cowok 3">
+                            </div>
+                            <div class="avatar-option-small" onclick="changeAvatar('cewek1')">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=girl1&gender=female" alt="Cewek 1">
+                            </div>
+                            <div class="avatar-option-small" onclick="changeAvatar('cewek2')">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=girl2&gender=female" alt="Cewek 2">
+                            </div>
+                            <div class="avatar-option-small" onclick="changeAvatar('cewek3')">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=girl3&gender=female" alt="Cewek 3">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/api/github.js"></script>
+    <script src="/js/api/pakasir.js"></script>
+    <script src="/js/api/indosmm.js"></script>
+    <script src="/js/api/rumahotp.js"></script>
+    <script src="/js/api/telegram.js"></script>
+    <script src="/js/services/order-smm.js"></script>
+    <script src="/js/services/order-nokos.js"></script>
+    <script src="/js/dashboard.js"></script>
+</body>
+                  </html>
