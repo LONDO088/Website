@@ -4,7 +4,7 @@ const CONFIG = {
     // ==================== GITHUB DATABASE ====================
     github: {
         owner: 'LONDO088',
-        repo: 'tessss',
+        repo: 'Uko',
         token: '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',
         files: {
             users: 'users.json',
