@@ -3,18 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMM Panel - Login</title>
-    <link rel="stylesheet" href="style.css">
+    <title>SMM Panel Professional - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .auth-box {
+            background: #1e293b;
+            padding: 40px 30px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid #334155;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 2.2em;
+            margin-bottom: 5px;
+            color: #22c55e;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            color: #3b82f6;
+        }
+
+        .tagline {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 20px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: #0f172a;
+            padding: 5px;
+            border-radius: 12px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .tab-btn.active {
+            background: #22c55e;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #94a3b8;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            color: white;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+        }
+
+        .form-group input::placeholder {
+            color: #475569;
+        }
+
+        .btn-primary, .btn-secondary {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: #22c55e;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: #16a34a;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .demo-login {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #334155;
+            color: #94a3b8;
+            font-size: 0.9em;
+        }
+
+        .demo-login strong {
+            color: #22c55e;
+            background: #0f172a;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 0.9em;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading-spinner {
+            border: 3px solid #334155;
+            border-top: 3px solid #22c55e;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #334155;
+        }
+
+        .feature-item {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.8em;
+        }
+
+        .feature-item span {
+            display: block;
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+    </style>
 </head>
 <body>
     <div class="auth-container">
         <div class="auth-box">
-            <h1 class="logo">⚡ SMM PANEL PRO</h1>
+            <h1 class="logo">⚡ SMM<span>PANEL</span></h1>
             <p class="tagline">Social Media Marketing Panel #1 Indonesia</p>
             
             <div class="auth-tabs">
-                <button class="tab-btn active" onclick="showTab('login')">Login</button>
-                <button class="tab-btn" onclick="showTab('register')">Register</button>
+                <button class="tab-btn active" onclick="showTab('login')">🔐 Login</button>
+                <button class="tab-btn" onclick="showTab('register')">📝 Register</button>
             </div>
             
             <!-- Login Form -->
@@ -25,10 +246,13 @@
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="loginPassword" placeholder="Masukkan password">
+                    <input type="password" id="loginPassword" placeholder="••••••••">
+                </div>
+                <div id="loginError" class="error-message"></div>
+                <div id="loginLoading" class="loading">
+                    <div class="loading-spinner"></div>
                 </div>
                 <button onclick="login()" class="btn-primary">🔐 LOGIN</button>
-                <p class="demo-login">Demo: admin / admin123</p>
             </div>
             
             <!-- Register Form -->
@@ -39,13 +263,41 @@
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="regPassword" placeholder="Buat password">
+                    <input type="password" id="regPassword" placeholder="Minimal 6 karakter">
                 </div>
                 <div class="form-group">
                     <label>Konfirmasi Password</label>
                     <input type="password" id="regConfirm" placeholder="Ulangi password">
                 </div>
+                <div id="registerError" class="error-message"></div>
+                <div id="registerLoading" class="loading">
+                    <div class="loading-spinner"></div>
+                </div>
                 <button onclick="register()" class="btn-secondary">📝 REGISTER</button>
+            </div>
+            
+            <div class="demo-login">
+                <p>Demo Login:</p>
+                <strong>admin / admin123</strong>
+            </div>
+
+            <div class="features">
+                <div class="feature-item">
+                    <span>📱</span>
+                    Instagram & TikTok
+                </div>
+                <div class="feature-item">
+                    <span>⚡</span>
+                    Proses Cepat
+                </div>
+                <div class="feature-item">
+                    <span>💳</span>
+                    QRIS Otomatis
+                </div>
+                <div class="feature-item">
+                    <span>🛡️</span>
+                    Aman & Terpercaya
+                </div>
             </div>
         </div>
     </div>
@@ -53,27 +305,42 @@
     <script>
         const API_URL = window.location.origin;
         
+        // Cek apakah sudah login
+        const token = localStorage.getItem('token');
+        if (token) {
+            window.location.href = '/dashboard.html';
+        }
+        
         function showTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
             
             if (tab === 'login') {
-                document.querySelector('.tab-btn').classList.add('active');
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
                 document.getElementById('loginForm').classList.add('active');
             } else {
                 document.querySelectorAll('.tab-btn')[1].classList.add('active');
                 document.getElementById('registerForm').classList.add('active');
             }
+            
+            // Sembunyikan error
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('registerError').style.display = 'none';
         }
         
         async function login() {
-            const username = document.getElementById('loginUsername').value;
+            const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value;
             
+            // Validasi
             if (!username || !password) {
-                alert('Username dan password harus diisi!');
+                showError('login', 'Username dan password harus diisi!');
                 return;
             }
+            
+            // Tampilkan loading
+            document.getElementById('loginLoading').style.display = 'block';
+            document.getElementById('loginError').style.display = 'none';
             
             try {
                 const res = await fetch(`${API_URL}/api/login`, {
@@ -84,37 +351,58 @@
                 
                 const data = await res.json();
                 
+                // Sembunyikan loading
+                document.getElementById('loginLoading').style.display = 'none';
+                
                 if (data.success) {
+                    // Simpan token dan user data
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
                     
+                    // Redirect berdasarkan role
                     if (data.user.role === 'admin') {
                         window.location.href = '/admin.html';
                     } else {
                         window.location.href = '/dashboard.html';
                     }
                 } else {
-                    alert(data.error || 'Login gagal!');
+                    showError('login', data.error || 'Login gagal!');
                 }
             } catch (error) {
-                alert('Error: ' + error.message);
+                document.getElementById('loginLoading').style.display = 'none';
+                showError('login', 'Koneksi error: ' + error.message);
             }
         }
         
         async function register() {
-            const username = document.getElementById('regUsername').value;
+            const username = document.getElementById('regUsername').value.trim();
             const password = document.getElementById('regPassword').value;
             const confirm = document.getElementById('regConfirm').value;
             
+            // Validasi
             if (!username || !password) {
-                alert('Username dan password harus diisi!');
+                showError('register', 'Username dan password harus diisi!');
+                return;
+            }
+            
+            if (username.length < 3) {
+                showError('register', 'Username minimal 3 karakter');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('register', 'Password minimal 6 karakter');
                 return;
             }
             
             if (password !== confirm) {
-                alert('Password tidak cocok!');
+                showError('register', 'Password tidak cocok!');
                 return;
             }
+            
+            // Tampilkan loading
+            document.getElementById('registerLoading').style.display = 'block';
+            document.getElementById('registerError').style.display = 'none';
             
             try {
                 const res = await fetch(`${API_URL}/api/register`, {
@@ -125,16 +413,42 @@
                 
                 const data = await res.json();
                 
+                // Sembunyikan loading
+                document.getElementById('registerLoading').style.display = 'none';
+                
                 if (data.success) {
-                    alert('Registrasi berhasil! Silakan login.');
+                    alert('✅ Registrasi berhasil! Silakan login.');
+                    // Reset form
+                    document.getElementById('regUsername').value = '';
+                    document.getElementById('regPassword').value = '';
+                    document.getElementById('regConfirm').value = '';
+                    // Pindah ke tab login
                     showTab('login');
                 } else {
-                    alert(data.error || 'Registrasi gagal!');
+                    showError('register', data.error || 'Registrasi gagal!');
                 }
             } catch (error) {
-                alert('Error: ' + error.message);
+                document.getElementById('registerLoading').style.display = 'none';
+                showError('register', 'Koneksi error: ' + error.message);
             }
         }
+        
+        function showError(form, message) {
+            const errorEl = document.getElementById(form + 'Error');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+        
+        // Enter key handler
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                if (document.getElementById('loginForm').classList.contains('active')) {
+                    login();
+                } else {
+                    register();
+                }
+            }
+        });
     </script>
 </body>
 </html>
