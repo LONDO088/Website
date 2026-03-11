@@ -14,6 +14,17 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
+// ==================== PAKASIR CONFIG (BENER) ====================
+const PAKASIR = {
+    project: process.env.PAKASIR_PROJECT || "londk",
+    api_key: process.env.PAKASIR_API_KEY || "HGdIzru2dsvwpcJwIiKE9I7Z1iYoi45Q"
+};
+
+console.log('✅ PAKASIR Config:', { 
+    project: PAKASIR.project, 
+    api_key: PAKASIR.api_key.substring(0, 5) + '...' 
+});
+
 // ==================== DATABASE SETUP ====================
 const DB_FILES = {
     users: 'users.json',
@@ -21,17 +32,18 @@ const DB_FILES = {
     deposits: 'deposits.json'
 };
 
-// Initialize database files
+// Initialize database
 async function initDB() {
     for (const [key, file] of Object.entries(DB_FILES)) {
         try {
             await fs.access(file);
+            console.log(`✅ ${file} exists`);
         } catch {
             let initialData = [];
             if (key === 'users') {
                 const hashedPassword = await bcrypt.hash('admin123', 10);
                 initialData = [{
-                    id: 'admin_' + Date.now(),
+                    id: uuidv4(),
                     username: 'admin',
                     password: hashedPassword,
                     balance: 999999999,
@@ -40,6 +52,7 @@ async function initDB() {
                 }];
             }
             await fs.writeFile(file, JSON.stringify(initialData, null, 2));
+            console.log(`✅ ${file} created`);
         }
     }
 }
@@ -50,13 +63,20 @@ async function readDB(file) {
     try {
         const data = await fs.readFile(file, 'utf8');
         return JSON.parse(data);
-    } catch {
+    } catch (error) {
+        console.error(`Error reading ${file}:`, error);
         return [];
     }
 }
 
 async function writeDB(file, data) {
-    await fs.writeFile(file, JSON.stringify(data, null, 2));
+    try {
+        await fs.writeFile(file, JSON.stringify(data, null, 2));
+        return true;
+    } catch (error) {
+        console.error(`Error writing ${file}:`, error);
+        return false;
+    }
 }
 
 // ==================== JWT MIDDLEWARE ====================
@@ -64,10 +84,14 @@ function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     
-    if (!token) return res.status(401).json({ error: 'No token' });
+    if (!token) {
+        return res.status(401).json({ error: 'No token provided' });
+    }
     
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: 'Invalid token' });
+        if (err) {
+            return res.status(403).json({ error: 'Invalid token' });
+        }
         req.user = user;
         next();
     });
@@ -80,9 +104,8 @@ function isAdmin(req, res, next) {
     next();
 }
 
-// ==================== DATA LAYANAN ====================
+// ==================== SERVICES DATA ====================
 const SERVICES = [
-    // INSTAGRAM FOLLOWERS INDONESIA
     {
         id: 1,
         category: "instagram_followers",
@@ -90,65 +113,31 @@ const SERVICES = [
         price: 73000,
         min: 100,
         max: 8000,
-        description: "Followers Indonesia | Super HQ | Super Fast | No Refill",
+        description: "Followers Indonesia | Super HQ | Super Fast",
         speed: "Super Fast"
     },
     {
         id: 2,
         category: "instagram_followers",
-        name: "Instagram Followers Indonesia REAL [MAX 10K]",
+        name: "Instagram Followers Indonesia REAL",
         price: 72838,
         min: 100,
         max: 10000,
-        description: "Followers REAL Indonesia | MAX 10K | BETA SERVER",
+        description: "Followers REAL Indonesia | MAX 10K",
         speed: "Fast"
     },
     {
         id: 3,
-        category: "instagram_followers",
-        name: "Instagram Followers Indo BEST SELLER",
-        price: 75220,
-        min: 100,
-        max: 10000,
-        description: "Followers Indonesia | REFILL 25 HARI | 20K/DAY",
-        speed: "20K/Day"
-    },
-    {
-        id: 4,
-        category: "instagram_followers",
-        name: "Instagram Followers REAL EXTRA 10%",
-        price: 77597,
-        min: 100,
-        max: 50000,
-        description: "Followers Indonesia REAL | EXTRA 10% BONUS",
-        speed: "Fast"
-    },
-    
-    // INSTAGRAM LIKES
-    {
-        id: 5,
         category: "instagram_likes",
-        name: "Instagram Likes [MAX 1M] Guaranteed",
+        name: "Instagram Likes [MAX 1M]",
         price: 6388,
         min: 100,
         max: 1000000,
-        description: "Likes | 100% Old Accounts | Drop 0% | 30 Days Refill",
+        description: "Likes | 100% Old Accounts | 30 Days Refill",
         speed: "50K/Day"
     },
     {
-        id: 6,
-        category: "instagram_likes",
-        name: "Instagram Likes [MAX 2M]",
-        price: 7222,
-        min: 100,
-        max: 2000000,
-        description: "Likes | Real Accounts | Cancel Enable | 30 Days",
-        speed: "100K/Day"
-    },
-    
-    // INSTAGRAM VIEWS
-    {
-        id: 7,
+        id: 4,
         category: "instagram_views",
         name: "Instagram Reel Views [MAX 3M]",
         price: 5023,
@@ -158,68 +147,14 @@ const SERVICES = [
         speed: "Ultrafast"
     },
     {
-        id: 8,
-        category: "instagram_views",
-        name: "Instagram Video Views [MAX 100M]",
-        price: 5061,
-        min: 100,
-        max: 100000000,
-        description: "Video Views | All Link | Fast",
-        speed: "Fast"
-    },
-    
-    // TIKTOK
-    {
-        id: 9,
+        id: 5,
         category: "tiktok_followers",
         name: "TikTok Followers Indonesia",
         price: 85000,
         min: 100,
         max: 50000,
-        description: "Followers TikTok Indonesia | REAL | Fast",
+        description: "Followers TikTok Indonesia | REAL",
         speed: "Fast"
-    },
-    {
-        id: 10,
-        category: "tiktok_likes",
-        name: "TikTok Likes Indonesia",
-        price: 45000,
-        min: 100,
-        max: 100000,
-        description: "Likes TikTok Indonesia | REAL | Super Fast",
-        speed: "Super Fast"
-    },
-    {
-        id: 11,
-        category: "tiktok_views",
-        name: "TikTok Views",
-        price: 3500,
-        min: 1000,
-        max: 10000000,
-        description: "Views TikTok | Instant | High Quality",
-        speed: "Instant"
-    },
-    
-    // YOUTUBE
-    {
-        id: 12,
-        category: "youtube_views",
-        name: "YouTube Views Indonesia",
-        price: 25000,
-        min: 1000,
-        max: 1000000,
-        description: "Views YouTube Indonesia | REAL | Slow Fill",
-        speed: "10K/Day"
-    },
-    {
-        id: 13,
-        category: "youtube_subs",
-        name: "YouTube Subscribers Indonesia",
-        price: 125000,
-        min: 100,
-        max: 100000,
-        description: "Subscribers YouTube Indonesia | REAL | Permanent",
-        speed: "1K/Day"
     }
 ];
 
@@ -227,21 +162,28 @@ const CATEGORIES = [
     { id: "instagram_followers", name: "Instagram Followers", icon: "📱" },
     { id: "instagram_likes", name: "Instagram Likes", icon: "❤️" },
     { id: "instagram_views", name: "Instagram Views", icon: "👁️" },
-    { id: "tiktok_followers", name: "TikTok Followers", icon: "🎵" },
-    { id: "tiktok_likes", name: "TikTok Likes", icon: "🎵❤️" },
-    { id: "tiktok_views", name: "TikTok Views", icon: "🎵👁️" },
-    { id: "youtube_views", name: "YouTube Views", icon: "▶️" },
-    { id: "youtube_subs", name: "YouTube Subs", icon: "▶️👥" }
+    { id: "tiktok_followers", name: "TikTok Followers", icon: "🎵" }
 ];
 
 // ==================== API ROUTES ====================
 
-// GET categories
+// Test route
+app.get('/api/test', (req, res) => {
+    res.json({ 
+        message: 'API is working!', 
+        pakasir: {
+            project: PAKASIR.project,
+            api_key_set: !!PAKASIR.api_key
+        }
+    });
+});
+
+// Get categories
 app.get('/api/categories', (req, res) => {
     res.json(CATEGORIES);
 });
 
-// GET services
+// Get services
 app.get('/api/services', (req, res) => {
     const { category } = req.query;
     if (category) {
@@ -251,14 +193,7 @@ app.get('/api/services', (req, res) => {
     res.json(SERVICES);
 });
 
-// GET single service
-app.get('/api/services/:id', (req, res) => {
-    const service = SERVICES.find(s => s.id == req.params.id);
-    if (!service) return res.status(404).json({ error: 'Service not found' });
-    res.json(service);
-});
-
-// REGISTER
+// Register
 app.post('/api/register', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -267,10 +202,14 @@ app.post('/api/register', async (req, res) => {
             return res.status(400).json({ error: 'Username dan password required' });
         }
         
+        if (password.length < 6) {
+            return res.status(400).json({ error: 'Password minimal 6 karakter' });
+        }
+        
         const users = await readDB(DB_FILES.users);
         
         if (users.find(u => u.username === username)) {
-            return res.status(400).json({ error: 'Username sudah ada' });
+            return res.status(400).json({ error: 'Username sudah digunakan' });
         }
         
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -286,13 +225,18 @@ app.post('/api/register', async (req, res) => {
         users.push(newUser);
         await writeDB(DB_FILES.users, users);
         
-        res.json({ success: true, message: 'Registrasi berhasil' });
+        res.json({ 
+            success: true, 
+            message: 'Registrasi berhasil! Silakan login.' 
+        });
+        
     } catch (error) {
+        console.error('Register error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// LOGIN
+// Login
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -300,8 +244,13 @@ app.post('/api/login', async (req, res) => {
         const users = await readDB(DB_FILES.users);
         const user = users.find(u => u.username === username);
         
-        if (!user || !(await bcrypt.compare(password, user.password))) {
-            return res.status(401).json({ error: 'Username/password salah' });
+        if (!user) {
+            return res.status(401).json({ error: 'Username tidak ditemukan' });
+        }
+        
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
+            return res.status(401).json({ error: 'Password salah' });
         }
         
         const token = jwt.sign(
@@ -319,12 +268,14 @@ app.post('/api/login', async (req, res) => {
                 role: user.role
             }
         });
+        
     } catch (error) {
+        console.error('Login error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// GET user data
+// Get user data
 app.get('/api/user', authenticateToken, async (req, res) => {
     try {
         const users = await readDB(DB_FILES.users);
@@ -339,31 +290,42 @@ app.get('/api/user', authenticateToken, async (req, res) => {
             balance: user.balance,
             role: user.role
         });
+        
     } catch (error) {
+        console.error('Get user error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// DEPOSIT
+// ==================== DEPOSIT PAKASIR - FIXED ====================
 app.post('/api/deposit', authenticateToken, async (req, res) => {
     try {
         const { amount } = req.body;
         
-        if (amount < 10000) {
-            return res.status(400).json({ error: 'Minimal deposit Rp 10.000' });
+        // Validasi
+        if (!amount || amount < 10000) {
+            return res.status(400).json({ 
+                error: 'Minimal deposit Rp 10.000' 
+            });
         }
         
-        const orderId = `INV${Date.now()}${Math.floor(Math.random() * 1000)}`;
+        // Generate order ID unik
+        const orderId = `INV${Date.now()}_${Math.random().toString(36).substring(7)}`;
         
-        // Pakasir URL (ganti dengan URL real nanti)
-        const paymentUrl = `https://app.pakasir.com/#/invoice/${orderId}`;
+        // ===== FORMAT PAKASIR YANG BENAR =====
+        // Format: https://app.pakasir.com/#/invoice/{project}/{api_key}/{order_id}/{amount}
+        const paymentUrl = `https://app.pakasir.com/#/invoice/${PAKASIR.project}/${PAKASIR.api_key}/${orderId}/${amount}`;
         
+        console.log('🔗 Payment URL:', paymentUrl);
+        
+        // Simpan deposit
         const deposit = {
             id: orderId,
             userId: req.user.id,
             username: req.user.username,
             amount: parseInt(amount),
             status: 'pending',
+            paymentUrl: paymentUrl,
             createdAt: new Date().toISOString()
         };
         
@@ -373,125 +335,186 @@ app.post('/api/deposit', authenticateToken, async (req, res) => {
         
         res.json({
             success: true,
-            orderId,
-            paymentUrl,
-            amount
+            orderId: orderId,
+            paymentUrl: paymentUrl,
+            amount: amount,
+            message: 'Scan QRIS untuk membayar'
         });
+        
     } catch (error) {
-        res.status(500).json({ error: 'Server error' });
+        console.error('❌ Deposit error:', error);
+        res.status(500).json({ 
+            error: 'Gagal membuat deposit. Coba lagi.' 
+        });
     }
 });
 
-// WEBHOOK Pakasir
-app.post('/api/webhook/pakasir', async (req, res) => {
+// ==================== CEK STATUS DEPOSIT ====================
+app.get('/api/deposit/status/:orderId', authenticateToken, async (req, res) => {
     try {
-        const { order_id, status } = req.body;
+        const { orderId } = req.params;
         
         const deposits = await readDB(DB_FILES.deposits);
-        const deposit = deposits.find(d => d.id === order_id);
+        const deposit = deposits.find(d => d.id === orderId && d.userId === req.user.id);
         
-        if (deposit && status === 'paid') {
-            deposit.status = 'success';
-            
-            const users = await readDB(DB_FILES.users);
-            const user = users.find(u => u.id === deposit.userId);
-            if (user) {
-                user.balance += deposit.amount;
-            }
-            
-            await writeDB(DB_FILES.users, users);
-            await writeDB(DB_FILES.deposits, deposits);
+        if (!deposit) {
+            return res.status(404).json({ error: 'Deposit tidak ditemukan' });
         }
         
-        res.json({ success: true });
+        // Untuk demo, kita anggap pending
+        // Nanti webhook dari Pakasir yang akan update status
+        
+        res.json({
+            orderId: deposit.id,
+            status: deposit.status,
+            amount: deposit.amount,
+            createdAt: deposit.createdAt
+        });
+        
     } catch (error) {
+        console.error('Status check error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// CREATE ORDER
+// ==================== WEBHOOK PAKASIR ====================
+app.post('/api/webhook/pakasir', express.json(), async (req, res) => {
+    try {
+        const { order_id, status, amount } = req.body;
+        
+        console.log('📡 Webhook received:', { order_id, status, amount });
+        
+        const deposits = await readDB(DB_FILES.deposits);
+        const depositIndex = deposits.findIndex(d => d.id === order_id);
+        
+        if (depositIndex !== -1 && status === 'paid') {
+            // Update status deposit
+            deposits[depositIndex].status = 'success';
+            deposits[depositIndex].paidAt = new Date().toISOString();
+            
+            // Update user balance
+            const users = await readDB(DB_FILES.users);
+            const userIndex = users.findIndex(u => u.id === deposits[depositIndex].userId);
+            
+            if (userIndex !== -1) {
+                users[userIndex].balance += deposits[depositIndex].amount;
+                await writeDB(DB_FILES.users, users);
+                console.log(`💰 Balance added for ${users[userIndex].username}`);
+            }
+            
+            await writeDB(DB_FILES.deposits, deposits);
+            
+            res.json({ 
+                success: true, 
+                message: 'Deposit processed successfully' 
+            });
+        } else {
+            res.json({ 
+                success: false, 
+                message: 'Invalid order or status' 
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ Webhook error:', error);
+        res.status(500).json({ error: 'Webhook processing failed' });
+    }
+});
+
+// ==================== ORDER ====================
 app.post('/api/order', authenticateToken, async (req, res) => {
     try {
         const { serviceId, link, quantity } = req.body;
         
         const service = SERVICES.find(s => s.id == serviceId);
         if (!service) {
-            return res.status(400).json({ error: 'Service tidak ditemukan' });
+            return res.status(400).json({ error: 'Layanan tidak ditemukan' });
         }
         
         if (quantity < service.min || (service.max > 0 && quantity > service.max)) {
-            return res.status(400).json({ error: 'Jumlah tidak sesuai ketentuan' });
+            return res.status(400).json({ 
+                error: `Minimal ${service.min} - Maksimal ${service.max || 'tidak terbatas'}` 
+            });
         }
         
         const totalPrice = (service.price * quantity) / 1000;
         
         const users = await readDB(DB_FILES.users);
-        const user = users.find(u => u.id === req.user.id);
+        const userIndex = users.findIndex(u => u.id === req.user.id);
         
-        if (user.balance < totalPrice) {
+        if (users[userIndex].balance < totalPrice) {
             return res.status(400).json({ error: 'Saldo tidak cukup' });
         }
         
-        user.balance -= totalPrice;
+        // Potong saldo
+        users[userIndex].balance -= totalPrice;
         
+        // Buat order
         const order = {
             id: `ORD${Date.now()}`,
-            userId: user.id,
-            username: user.username,
+            userId: req.user.id,
+            username: req.user.username,
             serviceId: service.id,
             serviceName: service.name,
-            link,
+            link: link,
             quantity: parseInt(quantity),
             price: totalPrice,
-            status: 'Processing',
+            status: 'Pending',
             createdAt: new Date().toISOString()
         };
         
         const orders = await readDB(DB_FILES.orders);
         orders.push(order);
         
+        // Simpan perubahan
         await writeDB(DB_FILES.users, users);
         await writeDB(DB_FILES.orders, orders);
         
         res.json({
             success: true,
-            order,
-            newBalance: user.balance
+            order: order,
+            newBalance: users[userIndex].balance
         });
+        
     } catch (error) {
-        res.status(500).json({ error: 'Server error' });
+        console.error('Order error:', error);
+        res.status(500).json({ error: 'Gagal membuat order' });
     }
 });
 
-// GET user orders
+// Get user orders
 app.get('/api/orders', authenticateToken, async (req, res) => {
     try {
         const orders = await readDB(DB_FILES.orders);
         const userOrders = orders
             .filter(o => o.userId === req.user.id)
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
         res.json(userOrders);
+        
     } catch (error) {
+        console.error('Get orders error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// GET user deposits
+// Get user deposits
 app.get('/api/deposits', authenticateToken, async (req, res) => {
     try {
         const deposits = await readDB(DB_FILES.deposits);
         const userDeposits = deposits
             .filter(d => d.userId === req.user.id)
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
         res.json(userDeposits);
+        
     } catch (error) {
+        console.error('Get deposits error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
 // ==================== ADMIN ROUTES ====================
-
-// GET all users (admin)
 app.get('/api/admin/users', authenticateToken, isAdmin, async (req, res) => {
     try {
         const users = await readDB(DB_FILES.users);
@@ -502,7 +525,6 @@ app.get('/api/admin/users', authenticateToken, isAdmin, async (req, res) => {
     }
 });
 
-// GET all orders (admin)
 app.get('/api/admin/orders', authenticateToken, isAdmin, async (req, res) => {
     try {
         const orders = await readDB(DB_FILES.orders);
@@ -512,53 +534,46 @@ app.get('/api/admin/orders', authenticateToken, isAdmin, async (req, res) => {
     }
 });
 
-// GET all deposits (admin)
-app.get('/api/admin/deposits', authenticateToken, isAdmin, async (req, res) => {
-    try {
-        const deposits = await readDB(DB_FILES.deposits);
-        res.json(deposits.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
-    } catch (error) {
-        res.status(500).json({ error: 'Server error' });
-    }
-});
-
-// ADD balance (admin)
 app.post('/api/admin/add-balance', authenticateToken, isAdmin, async (req, res) => {
     try {
         const { username, amount } = req.body;
         
         const users = await readDB(DB_FILES.users);
-        const user = users.find(u => u.username === username);
+        const userIndex = users.findIndex(u => u.username === username);
         
-        if (!user) {
+        if (userIndex === -1) {
             return res.status(404).json({ error: 'User tidak ditemukan' });
         }
         
-        user.balance += parseInt(amount);
+        users[userIndex].balance += parseInt(amount);
         await writeDB(DB_FILES.users, users);
         
-        res.json({ success: true, newBalance: user.balance });
+        res.json({ 
+            success: true, 
+            newBalance: users[userIndex].balance 
+        });
+        
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// UPDATE order status (admin)
 app.post('/api/admin/update-order', authenticateToken, isAdmin, async (req, res) => {
     try {
         const { orderId, status } = req.body;
         
         const orders = await readDB(DB_FILES.orders);
-        const order = orders.find(o => o.id === orderId);
+        const orderIndex = orders.findIndex(o => o.id === orderId);
         
-        if (!order) {
+        if (orderIndex === -1) {
             return res.status(404).json({ error: 'Order tidak ditemukan' });
         }
         
-        order.status = status;
+        orders[orderIndex].status = status;
         await writeDB(DB_FILES.orders, orders);
         
         res.json({ success: true });
+        
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
     }
@@ -567,6 +582,15 @@ app.post('/api/admin/update-order', authenticateToken, isAdmin, async (req, res)
 // ==================== START SERVER ====================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 SMM Panel running on http://localhost:${PORT}`);
-    console.log(`📝 Login admin: admin / admin123`);
+    console.log('\n=================================');
+    console.log('🚀 SMM PANEL IS RUNNING!');
+    console.log('=================================');
+    console.log(`📌 Local: http://localhost:${PORT}`);
+    console.log(`📌 Login: http://localhost:${PORT}`);
+    console.log(`📌 Admin: admin / admin123`);
+    console.log('=================================');
+    console.log('✅ PAKASIR CONFIG:');
+    console.log(`   - Project: ${PAKASIR.project}`);
+    console.log(`   - API Key: ${PAKASIR.api_key.substring(0, 5)}...`);
+    console.log('=================================\n');
 });
