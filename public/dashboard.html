@@ -4,16 +4,501 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMM Panel - Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #0f172a;
+            color: white;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: #1e293b;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #22c55e;
+        }
+
+        .nav-brand span {
+            color: #3b82f6;
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .balance {
+            background: #334155;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            color: #22c55e;
+            border: 1px solid #22c55e;
+        }
+
+        .btn-deposit {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-deposit:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+        }
+
+        .btn-logout {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: #dc2626;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 260px 1fr 340px;
+            gap: 20px;
+            padding: 20px;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 20px;
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .sidebar h3 {
+            color: #94a3b8;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .categories-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .category-item {
+            padding: 12px 15px;
+            background: #334155;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-item:hover {
+            background: #22c55e;
+            transform: translateX(5px);
+        }
+
+        .category-item.active {
+            background: #22c55e;
+            font-weight: 600;
+        }
+
+        /* Services Area */
+        .services-area {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .search-box {
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 14px 20px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 30px;
+            color: white;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 15px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .services-grid::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .services-grid::-webkit-scrollbar-track {
+            background: #334155;
+            border-radius: 10px;
+        }
+
+        .services-grid::-webkit-scrollbar-thumb {
+            background: #22c55e;
+            border-radius: 10px;
+        }
+
+        .service-card {
+            background: #334155;
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid #475569;
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            background: #3b82f6;
+            border-color: #3b82f6;
+            box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.3);
+        }
+
+        .service-card h4 {
+            font-size: 1em;
+            margin-bottom: 15px;
+            color: white;
+            line-height: 1.4;
+        }
+
+        .service-price {
+            color: #22c55e;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .service-limits {
+            display: flex;
+            justify-content: space-between;
+            color: #94a3b8;
+            font-size: 0.85em;
+            margin-bottom: 10px;
+        }
+
+        .service-speed {
+            color: #f59e0b;
+            font-size: 0.85em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Order Sidebar */
+        .order-sidebar {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 20px;
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .order-sidebar h3 {
+            color: #94a3b8;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #94a3b8;
+            font-size: 0.9em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            color: white;
+            font-size: 0.95em;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #22c55e;
+        }
+
+        .form-group input[readonly] {
+            background: #1e293b;
+            color: #94a3b8;
+        }
+
+        .service-limit {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            color: #94a3b8;
+            font-size: 0.85em;
+        }
+
+        .btn-order {
+            width: 100%;
+            padding: 14px;
+            background: #22c55e;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-order:hover {
+            background: #16a34a;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(34, 197, 94, 0.3);
+        }
+
+        /* Recent Orders */
+        .recent-orders {
+            margin-top: 30px;
+        }
+
+        .recent-orders h4 {
+            color: #94a3b8;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .orders-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .order-item {
+            background: #334155;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 3px solid #22c55e;
+        }
+
+        .order-service {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .order-details {
+            display: flex;
+            justify-content: space-between;
+            color: #94a3b8;
+            font-size: 0.85em;
+            margin-bottom: 5px;
+        }
+
+        .order-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+
+        .status-pending { background: #f59e0b; color: black; }
+        .status-processing { background: #3b82f6; color: white; }
+        .status-completed { background: #22c55e; color: white; }
+        .status-canceled { background: #ef4444; color: white; }
+
+        .order-date {
+            font-size: 0.7em;
+            color: #64748b;
+            margin-top: 5px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            border: 1px solid #334155;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #94a3b8;
+            transition: all 0.3s;
+        }
+
+        .close:hover {
+            color: #ef4444;
+            transform: scale(1.1);
+        }
+
+        .payment-methods {
+            margin: 20px 0;
+            padding: 15px;
+            background: #334155;
+            border-radius: 12px;
+        }
+
+        .payment-method {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #0f172a;
+            border-radius: 8px;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 3px solid #334155;
+            border-top: 3px solid #22c55e;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* No Data */
+        .no-data {
+            text-align: center;
+            color: #64748b;
+            padding: 30px;
+            font-style: italic;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 220px 1fr;
+            }
+            .order-sidebar {
+                grid-column: span 2;
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .order-sidebar {
+                grid-column: span 1;
+            }
+            .navbar {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            .nav-menu {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard">
         <!-- Navbar -->
         <nav class="navbar">
-            <div class="nav-brand">⚡ SMM PANEL PRO</div>
+            <div class="nav-brand">⚡ SMM<span>PANEL</span></div>
             <div class="nav-menu">
                 <span class="balance">💰 Rp <span id="balance">0</span></span>
-                <button onclick="showDepositModal()" class="btn-deposit">💳 Deposit</button>
+                <button onclick="showDepositModal()" class="btn-deposit">💳 Deposit QRIS</button>
                 <button onclick="logout()" class="btn-logout">🚪 Logout</button>
             </div>
         </nav>
@@ -24,7 +509,9 @@
             <aside class="sidebar">
                 <h3>📋 KATEGORI</h3>
                 <div id="categories" class="categories-list">
-                    <div class="category-item active" onclick="filterServices('all')">📌 Semua Layanan</div>
+                    <div class="category-item active" onclick="filterServices('all')">
+                        <span>📌</span> Semua Layanan
+                    </div>
                 </div>
             </aside>
             
@@ -33,7 +520,9 @@
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="🔍 Cari layanan..." onkeyup="searchServices()">
                 </div>
-                <div id="services" class="services-grid"></div>
+                <div id="services" class="services-grid">
+                    <div class="no-data">Loading services...</div>
+                </div>
             </main>
             
             <!-- Order Sidebar -->
@@ -41,15 +530,15 @@
                 <h3>📝 BUAT ORDER</h3>
                 <form id="orderForm" onsubmit="submitOrder(event)">
                     <div class="form-group">
-                        <label>Layanan</label>
+                        <label>Layanan Dipilih</label>
                         <input type="text" id="selectedService" readonly placeholder="Pilih layanan">
                         <input type="hidden" id="selectedServiceId">
                         <input type="hidden" id="selectedServicePrice">
                     </div>
                     
                     <div class="form-group">
-                        <label>Link/Username</label>
-                        <input type="text" id="link" required placeholder="https://instagram.com/...">
+                        <label>Link / Username</label>
+                        <input type="text" id="link" required placeholder="https://instagram.com/username">
                     </div>
                     
                     <div class="form-group">
@@ -66,13 +555,19 @@
                         <input type="text" id="totalPrice" readonly value="Rp 0">
                     </div>
                     
+                    <div id="orderLoading" class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                    
                     <button type="submit" class="btn-order">🚀 ORDER SEKARANG</button>
                 </form>
                 
                 <!-- Recent Orders -->
                 <div class="recent-orders">
                     <h4>📋 RIWAYAT ORDER</h4>
-                    <div id="ordersList" class="orders-list"></div>
+                    <div id="ordersList" class="orders-list">
+                        <div class="no-data">Loading orders...</div>
+                    </div>
                 </div>
             </aside>
         </div>
@@ -82,27 +577,36 @@
     <div id="depositModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeDepositModal()">&times;</span>
-            <h2>💳 Deposit Saldo</h2>
+            <h2 style="color: white; margin-bottom: 20px;">💳 Deposit QRIS</h2>
             <div class="form-group">
                 <label>Jumlah Deposit (Rp)</label>
                 <input type="number" id="depositAmount" min="10000" step="10000" placeholder="Minimal Rp 10.000">
             </div>
             <div class="payment-methods">
-                <h4>Metode Pembayaran:</h4>
+                <h4 style="color: #94a3b8; margin-bottom: 10px;">Metode Pembayaran:</h4>
                 <div class="payment-method">
                     <input type="radio" name="payment" id="qris" checked>
-                    <label for="qris">💰 QRIS (Otomatis)</label>
+                    <label for="qris" style="color: white;">💰 QRIS - Otomatis</label>
                 </div>
             </div>
-            <button onclick="submitDeposit()" class="btn-deposit">Bayar Sekarang</button>
+            <div id="depositLoading" class="loading">
+                <div class="spinner"></div>
+            </div>
+            <button onclick="submitDeposit()" class="btn-deposit" style="width: 100%;">Bayar Sekarang</button>
         </div>
     </div>
+
+    <!-- QRIS Modal -->
+    <div id="qrisModal" class="modal"></div>
 
     <script>
         const API_URL = window.location.origin;
         const token = localStorage.getItem('token');
         
-        if (!token) window.location.href = '/';
+        // Cek login
+        if (!token) {
+            window.location.href = '/';
+        }
         
         let selectedService = null;
         let allServices = [];
@@ -114,9 +618,9 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();
-                document.getElementById('balance').innerText = formatRupiah(data.balance);
+                document.getElementById('balance').innerText = formatRupiah(data.balance).replace('Rp', '').trim();
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error loading user:', error);
             }
         }
         
@@ -130,12 +634,12 @@
                 categories.forEach(cat => {
                     container.innerHTML += `
                         <div class="category-item" onclick="filterServices('${cat.id}')">
-                            ${cat.icon} ${cat.name}
+                            <span>${cat.icon}</span> ${cat.name}
                         </div>
                     `;
                 });
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error loading categories:', error);
             }
         }
         
@@ -150,7 +654,8 @@
                 allServices = await res.json();
                 displayServices(allServices);
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error loading services:', error);
+                document.getElementById('services').innerHTML = '<div class="no-data">Gagal load services</div>';
             }
         }
         
@@ -159,16 +664,21 @@
             const container = document.getElementById('services');
             
             if (services.length === 0) {
-                container.innerHTML = '<div class="no-services">Tidak ada layanan</div>';
+                container.innerHTML = '<div class="no-data">Tidak ada layanan</div>';
                 return;
             }
             
             container.innerHTML = services.map(service => `
                 <div class="service-card" onclick="selectService(${service.id})">
                     <h4>${service.name}</h4>
-                    <div class="price">${formatRupiah(service.price * 1000)}/1000</div>
-                    <div class="limits">Min: ${service.min} | Max: ${service.max || '∞'}</div>
-                    <div class="speed">⚡ ${service.speed}</div>
+                    <div class="service-price">${formatRupiah(service.price * 1000)}/1000</div>
+                    <div class="service-limits">
+                        <span>Min: ${service.min}</span>
+                        <span>Max: ${service.max || '∞'}</span>
+                    </div>
+                    <div class="service-speed">
+                        <span>⚡</span> ${service.speed || 'Normal'}
+                    </div>
                 </div>
             `).join('');
         }
@@ -233,11 +743,25 @@
                 return;
             }
             
+            const quantity = document.getElementById('quantity').value;
+            if (!quantity || quantity < selectedService.min) {
+                alert(`Minimal order ${selectedService.min}`);
+                return;
+            }
+            
+            if (selectedService.max > 0 && quantity > selectedService.max) {
+                alert(`Maksimal order ${selectedService.max}`);
+                return;
+            }
+            
             const orderData = {
                 serviceId: selectedService.id,
                 link: document.getElementById('link').value,
-                quantity: document.getElementById('quantity').value
+                quantity: quantity
             };
+            
+            // Tampilkan loading
+            document.getElementById('orderLoading').style.display = 'block';
             
             try {
                 const res = await fetch(`${API_URL}/api/order`, {
@@ -251,16 +775,26 @@
                 
                 const data = await res.json();
                 
+                // Sembunyikan loading
+                document.getElementById('orderLoading').style.display = 'none';
+                
                 if (data.success) {
                     alert('✅ Order berhasil dibuat!');
                     loadUserData();
                     loadOrders();
+                    
+                    // Reset form
                     document.getElementById('orderForm').reset();
+                    document.getElementById('selectedService').value = '';
+                    document.getElementById('selectedServiceId').value = '';
+                    document.getElementById('selectedServicePrice').value = '';
+                    document.getElementById('totalPrice').value = 'Rp 0';
                     selectedService = null;
                 } else {
                     alert('❌ ' + (data.error || 'Order gagal'));
                 }
             } catch (error) {
+                document.getElementById('orderLoading').style.display = 'none';
                 alert('Error: ' + error.message);
             }
         }
@@ -276,20 +810,23 @@
                 const container = document.getElementById('ordersList');
                 
                 if (orders.length === 0) {
-                    container.innerHTML = '<p class="no-data">Belum ada order</p>';
+                    container.innerHTML = '<div class="no-data">Belum ada order</div>';
                     return;
                 }
                 
                 container.innerHTML = orders.slice(0, 10).map(order => `
                     <div class="order-item">
                         <div class="order-service">${order.serviceName}</div>
-                        <div class="order-details">${order.quantity} x ${formatRupiah(order.price)}</div>
+                        <div class="order-details">
+                            <span>${order.quantity} item</span>
+                            <span>${formatRupiah(order.price)}</span>
+                        </div>
                         <div class="order-status status-${order.status.toLowerCase()}">${order.status}</div>
-                        <div class="order-date">${new Date(order.createdAt).toLocaleDateString('id-ID')}</div>
+                        <div class="order-date">${formatDate(order.createdAt)}</div>
                     </div>
                 `).join('');
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error loading orders:', error);
             }
         }
         
@@ -310,6 +847,9 @@
                 return;
             }
             
+            // Tampilkan loading
+            document.getElementById('depositLoading').style.display = 'block';
+            
             try {
                 const res = await fetch(`${API_URL}/api/deposit`, {
                     method: 'POST',
@@ -322,11 +862,83 @@
                 
                 const data = await res.json();
                 
+                // Sembunyikan loading
+                document.getElementById('depositLoading').style.display = 'none';
+                
                 if (data.success) {
-                    window.open(data.paymentUrl, '_blank');
+                    showQRISModal(data.paymentUrl, data.amount, data.orderId);
                     closeDepositModal();
                 } else {
-                    alert(data.error || 'Deposit gagal');
+                    alert('❌ ' + (data.error || 'Deposit gagal'));
+                }
+            } catch (error) {
+                document.getElementById('depositLoading').style.display = 'none';
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        // Tampilkan modal QRIS
+        function showQRISModal(paymentUrl, amount, orderId) {
+            const modal = document.getElementById('qrisModal');
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 400px; text-align: center;">
+                    <span class="close" onclick="closeQRISModal()">&times;</span>
+                    <h2 style="color: white; margin-bottom: 20px;">💳 QRIS Pembayaran</h2>
+                    <p style="color: #22c55e; font-size: 2em; font-weight: bold; margin: 20px 0;">
+                        ${formatRupiah(amount)}
+                    </p>
+                    
+                    <!-- QR Code -->
+                    <div style="background: white; padding: 20px; border-radius: 16px; margin: 20px 0;">
+                        <img src="https://chart.googleapis.com/chart?chs=250x250&cht=qr&chl=${encodeURIComponent(paymentUrl)}&choe=UTF-8" 
+                             alt="QRIS" style="width: 200px; height: 200px; margin: 0 auto; display: block;">
+                    </div>
+                    
+                    <p style="color: #94a3b8; font-size: 0.9em; margin: 10px 0; word-break: break-all;">
+                        Order ID: ${orderId}
+                    </p>
+                    
+                    <div style="background: #1e293b; color: #f59e0b; padding: 15px; border-radius: 12px; margin: 20px 0; text-align: left;">
+                        <p style="margin-bottom: 5px;">📌 Cara Bayar:</p>
+                        <p style="font-size: 0.9em; color: #94a3b8;">1. Scan QRIS dengan m-banking</p>
+                        <p style="font-size: 0.9em; color: #94a3b8;">2. Masukkan jumlah ${formatRupiah(amount)}</p>
+                        <p style="font-size: 0.9em; color: #94a3b8;">3. Konfirmasi pembayaran</p>
+                        <p style="font-size: 0.9em; color: #94a3b8;">4. Saldo auto masuk setelah bayar</p>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="window.open('${paymentUrl}', '_blank')" class="btn-secondary" style="flex:1; padding: 12px;">
+                            🔗 Buka Link
+                        </button>
+                        <button onclick="checkDepositStatus('${orderId}')" class="btn-primary" style="flex:1; padding: 12px;">
+                            🔄 Cek Status
+                        </button>
+                    </div>
+                </div>
+            `;
+            modal.style.display = 'flex';
+        }
+        
+        function closeQRISModal() {
+            document.getElementById('qrisModal').style.display = 'none';
+        }
+        
+        async function checkDepositStatus(orderId) {
+            try {
+                const res = await fetch(`${API_URL}/api/deposit/status/${orderId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await res.json();
+                
+                if (data.status === 'success') {
+                    alert('✅ Pembayaran berhasil! Saldo sudah ditambahkan.');
+                    closeQRISModal();
+                    loadUserData();
+                } else if (data.status === 'pending') {
+                    if (confirm('⏳ Pembayaran masih pending. Cek lagi?')) {
+                        setTimeout(() => checkDepositStatus(orderId), 3000);
+                    }
                 }
             } catch (error) {
                 alert('Error: ' + error.message);
@@ -342,11 +954,23 @@
             }).format(amount);
         }
         
+        // Format date
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
         // Logout
         function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = '/';
+            if (confirm('Yakin ingin logout?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/';
+            }
         }
         
         // Initial load
@@ -354,14 +978,6 @@
         loadCategories();
         loadServices();
         loadOrders();
-        
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('depositModal');
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        }
     </script>
 </body>
 </html>
