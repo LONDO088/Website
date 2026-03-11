@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMM Panel - Admin</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="nav-brand">⚡ SMM PANEL PRO [ADMIN]</div>
+            <div class="nav-menu">
+                <span class="balance">💰 Rp <span id="balance">0</span></span>
+                <button onclick="logout()" class="btn-logout">🚪 Logout</button>
+            </div>
+        </nav>
+        
+        <!-- Admin Tabs -->
+        <div class="admin-tabs">
+            <button class="tab-btn active" onclick="showTab('users')">👥 Users</button>
+            <button class="tab-btn" onclick="showTab('orders')">📦 Orders</button>
+            <button class="tab-btn" onclick="showTab('deposits')">💳 Deposits</button>
+            <button class="tab-btn" onclick="showTab('stats')">📊 Statistics</button>
+        </div>
+        
+        <!-- Users Tab -->
+        <div id="usersTab" class="admin-tab active">
+            <h2>👥 Manajemen Users</h2>
+            <div class="admin-controls">
+                <input type="text" id="searchUser" placeholder="🔍 Cari user..." onkeyup="searchUsers()">
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Saldo</th>
+                            <th>Role</th>
+                            <th>Tanggal Daftar</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTable"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Orders Tab -->
+        <div id="ordersTab" class="admin-tab">
+            <h2>📦 Semua Orders</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID Order</th>
+                            <th>User</th>
+                            <th>Layanan</th>
+                            <th>Link</th>
+                            <th>Jumlah</th>
+                            <th>Harga</th>
+                            <th>Status</th>
+                            <th>Tanggal</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTable"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Deposits Tab -->
+        <div id="depositsTab" class="admin-tab">
+            <h2>💳 Riwayat Deposit</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID Deposit</th>
+                            <th>User</th>
+                            <th>Jumlah</th>
+                            <th>Status</th>
+                            <th>Tanggal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="depositsTable"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Stats Tab -->
+        <div id="statsTab" class="admin-tab">
+            <h2>📊 Statistik Panel</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Users</h3>
+                    <p id="totalUsers">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Orders</h3>
+                    <p id="totalOrders">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Deposit</h3>
+                    <p id="totalDeposit">Rp 0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Pending Orders</h3>
+                    <p id="pendingOrders">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Balance Modal -->
+    <div id="addBalanceModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeBalanceModal()">&times;</span>
+            <h2>💰 Tambah Saldo User</h2>
+            <input type="hidden" id="targetUsername">
+            <div class="form-group">
+                <label>Username: <span id="modalUsername"></span></label>
+            </div>
+            <div class="form-group">
+                <label>Jumlah Tambahan (Rp)</label>
+                <input type="number" id="addAmount" min="1000" step="1000">
+            </div>
+            <button onclick="addBalance()" class="btn-primary">Tambah Saldo</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        if (!token || user.role !== 'admin') {
+            window.location.href = '/';
+        }
+        
+        let allUsers = [];
+        let allOrders = [];
+        
+        // Load admin data
+        async function loadAdminData() {
+            await Promise.all([
+                loadUsers(),
+                loadOrders(),
+                loadDeposits(),
+                loadStats()
+            ]);
+        }
+        
+        // Load users
+        async function loadUsers() {
+            try {
+                const res = await fetch(`${API_URL}/api/admin/users`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                allUsers = await res.json();
+                displayUsers(allUsers);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        // Display users
+        function displayUsers(users) {
+            const tbody = document.getElementById('usersTable');
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>${user.username}</td>
+                    <td>${formatRupiah(user.balance)}</td>
+                    <td><span class="badge ${user.role}">${user.role}</span></td>
+                    <td>${new Date(user.createdAt).toLocaleDateString('id-ID')}</td>
+                    <td>
+                        <button onclick="openBalanceModal('${user.username}')" class="btn-small">➕ Saldo</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // Search users
+        function searchUsers() {
+            const keyword = document.getElementById('searchUser').value.toLowerCase();
+            
+            if (!keyword) {
+                displayUsers(allUsers);
+                return;
+            }
+            
+            const filtered = allUsers.filter(u => 
+                u.username.toLowerCase().includes(keyword)
+            );
+            
+            displayUsers(filtered);
+        }
+        
+        // Load orders
+        async function loadOrders() {
+            try {
+                const res = await fetch(`${API_URL}/api/admin/orders`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                allOrders = await res.json();
+                displayOrders(allOrders);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        // Display orders
+        function displayOrders(orders) {
+            const tbody = document.getElementById('ordersTable');
+            tbody.innerHTML = orders.map(order => `
+                <tr>
+                    <td>${order.id}</td>
+                    <td>${order.username}</td>
+                    <td>${order.serviceName}</td>
+                    <td>${order.link.substring(0, 30)}...</td>
+                    <td>${order.quantity}</td>
+                    <td>${formatRupiah(order.price)}</td>
+                    <td>
+                        <select onchange="updateOrderStatus('${order.id}', this.value)" class="status-select">
+                            <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                            <option value="Completed" ${order.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                            <option value="Canceled" ${order.status === 'Canceled' ? 'selected' : ''}>Canceled</option>
+                        </select>
+                    </td>
+                    <td>${new Date(order.createdAt).toLocaleDateString('id-ID')}</td>
+                    <td>
+                        <button onclick="viewOrderDetail('${order.id}')" class="btn-small">👁️</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // Update order status
+        async function updateOrderStatus(orderId, status) {
+            try {
+                const res = await fetch(`${API_URL}/api/admin/update-order`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ orderId, status })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('✅ Status order diupdate');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        // Load deposits
+        async function loadDeposits() {
+            try {
+                const res = await fetch(`${API_URL}/api/admin/deposits`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const deposits = await res.json();
+                displayDeposits(deposits);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        // Display deposits
+        function displayDeposits(deposits) {
+            const tbody = document.getElementById('depositsTable');
+            tbody.innerHTML = deposits.map(deposit => `
+                <tr>
+                    <td>${deposit.id}</td>
+                    <td>${deposit.username}</td>
+                    <td>${formatRupiah(deposit.amount)}</td>
+                    <td><span class="badge ${deposit.status}">${deposit.status}</span></td>
+                    <td>${new Date(deposit.createdAt).toLocaleDateString('id-ID')}</td>
+                </tr>
+            `).join('');
+        }
+        
+        // Load stats
+        async function loadStats() {
+            try {
+                const users = await fetch(`${API_URL}/api/admin/users`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }).then(res => res.json());
+                
+                const orders = await fetch(`${API_URL}/api/admin/orders`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }).then(res => res.json());
+                
+                const deposits = await fetch(`${API_URL}/api/admin/deposits`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }).then(res => res.json());
+                
+                const totalDeposit = deposits
+                    .filter(d => d.status === 'success')
+                    .reduce((sum, d) => sum + d.amount, 0);
+                
+                const pendingOrders = orders.filter(o => o.status === 'Pending').length;
+                
+                document.getElementById('totalUsers').innerText = users.length;
+                document.getElementById('totalOrders').innerText = orders.length;
+                document.getElementById('totalDeposit').innerText = formatRupiah(totalDeposit);
+                document.getElementById('pendingOrders').innerText = pendingOrders;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        // Balance modal functions
+        function openBalanceModal(username) {
+            document.getElementById('targetUsername').value = username;
+            document.getElementById('modalUsername').innerText = username;
+            document.getElementById('addBalanceModal').style.display = 'flex';
+        }
+        
+        function closeBalanceModal() {
+            document.getElementById('addBalanceModal').style.display = 'none';
+        }
+        
+        async function addBalance() {
+            const username = document.getElementById('targetUsername').value;
+            const amount = document.getElementById('addAmount').value;
+            
+            if (!amount || amount < 1000) {
+                alert('Minimal tambah Rp 1.000');
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_URL}/api/admin/add-balance`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ username, amount })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert(`✅ Saldo ${username} ditambah ${formatRupiah(amount)}`);
+                    closeBalanceModal();
+                    loadUsers();
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        // Show tab
+        function showTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+        }
+        
+        // Format currency
+        function formatRupiah(amount) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+        
+        // Logout
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+        
+        // Initial load
+        loadAdminData();
+    </script>
+</body>
+</html>
