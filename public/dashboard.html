@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMM Panel - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="nav-brand">⚡ SMM PANEL PRO</div>
+            <div class="nav-menu">
+                <span class="balance">💰 Rp <span id="balance">0</span></span>
+                <button onclick="showDepositModal()" class="btn-deposit">💳 Deposit</button>
+                <button onclick="logout()" class="btn-logout">🚪 Logout</button>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar Categories -->
+            <aside class="sidebar">
+                <h3>📋 KATEGORI</h3>
+                <div id="categories" class="categories-list">
+                    <div class="category-item active" onclick="filterServices('all')">📌 Semua Layanan</div>
+                </div>
+            </aside>
+            
+            <!-- Services Area -->
+            <main class="services-area">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="🔍 Cari layanan..." onkeyup="searchServices()">
+                </div>
+                <div id="services" class="services-grid"></div>
+            </main>
+            
+            <!-- Order Sidebar -->
+            <aside class="order-sidebar">
+                <h3>📝 BUAT ORDER</h3>
+                <form id="orderForm" onsubmit="submitOrder(event)">
+                    <div class="form-group">
+                        <label>Layanan</label>
+                        <input type="text" id="selectedService" readonly placeholder="Pilih layanan">
+                        <input type="hidden" id="selectedServiceId">
+                        <input type="hidden" id="selectedServicePrice">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Link/Username</label>
+                        <input type="text" id="link" required placeholder="https://instagram.com/...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Jumlah</label>
+                        <input type="number" id="quantity" required min="100" oninput="calculateTotal()">
+                        <div class="service-limit">
+                            <span>Min: <span id="minOrder">100</span></span>
+                            <span>Max: <span id="maxOrder">∞</span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Total Harga</label>
+                        <input type="text" id="totalPrice" readonly value="Rp 0">
+                    </div>
+                    
+                    <button type="submit" class="btn-order">🚀 ORDER SEKARANG</button>
+                </form>
+                
+                <!-- Recent Orders -->
+                <div class="recent-orders">
+                    <h4>📋 RIWAYAT ORDER</h4>
+                    <div id="ordersList" class="orders-list"></div>
+                </div>
+            </aside>
+        </div>
+    </div>
+    
+    <!-- Deposit Modal -->
+    <div id="depositModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeDepositModal()">&times;</span>
+            <h2>💳 Deposit Saldo</h2>
+            <div class="form-group">
+                <label>Jumlah Deposit (Rp)</label>
+                <input type="number" id="depositAmount" min="10000" step="10000" placeholder="Minimal Rp 10.000">
+            </div>
+            <div class="payment-methods">
+                <h4>Metode Pembayaran:</h4>
+                <div class="payment-method">
+                    <input type="radio" name="payment" id="qris" checked>
+                    <label for="qris">💰 QRIS (Otomatis)</label>
+                </div>
+            </div>
+            <button onclick="submitDeposit()" class="btn-deposit">Bayar Sekarang</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+        const token = localStorage.getItem('token');
+        
+        if (!token) window.location.href = '/';
+        
+        let selectedService = null;
+        let allServices = [];
+        
+        // Load user data
+        async function loadUserData() {
+            try {
+                const res = await fetch(`${API_URL}/api/user`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                document.getElementById('balance').innerText = formatRupiah(data.balance);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        // Load categories
+        async function loadCategories() {
+            try {
+                const res = await fetch(`${API_URL}/api/categories`);
+                const categories = await res.json();
+                
+                const container = document.getElementById('categories');
+                categories.forEach(cat => {
+                    container.innerHTML += `
+                        <div class="category-item" onclick="filterServices('${cat.id}')">
+                            ${cat.icon} ${cat.name}
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        // Load services
+        async function loadServices(category = 'all') {
+            try {
+                const url = category === 'all' 
+                    ? `${API_URL}/api/services`
+                    : `${API_URL}/api/services?category=${category}`;
+                
+                const res = await fetch(url);
+                allServices = await res.json();
+                displayServices(allServices);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        // Display services
+        function displayServices(services) {
+            const container = document.getElementById('services');
+            
+            if (services.length === 0) {
+                container.innerHTML = '<div class="no-services">Tidak ada layanan</div>';
+                return;
+            }
+            
+            container.innerHTML = services.map(service => `
+                <div class="service-card" onclick="selectService(${service.id})">
+                    <h4>${service.name}</h4>
+                    <div class="price">${formatRupiah(service.price * 1000)}/1000</div>
+                    <div class="limits">Min: ${service.min} | Max: ${service.max || '∞'}</div>
+                    <div class="speed">⚡ ${service.speed}</div>
+                </div>
+            `).join('');
+        }
+        
+        // Select service
+        function selectService(id) {
+            selectedService = allServices.find(s => s.id === id);
+            if (!selectedService) return;
+            
+            document.getElementById('selectedService').value = selectedService.name;
+            document.getElementById('selectedServiceId').value = selectedService.id;
+            document.getElementById('selectedServicePrice').value = selectedService.price;
+            document.getElementById('minOrder').innerText = selectedService.min;
+            document.getElementById('maxOrder').innerText = selectedService.max || '∞';
+            document.getElementById('quantity').min = selectedService.min;
+            
+            if (selectedService.max > 0) {
+                document.getElementById('quantity').max = selectedService.max;
+            }
+            
+            calculateTotal();
+        }
+        
+        // Calculate total
+        function calculateTotal() {
+            const price = parseFloat(document.getElementById('selectedServicePrice').value) || 0;
+            const qty = parseFloat(document.getElementById('quantity').value) || 0;
+            const total = (price * qty) / 1000;
+            document.getElementById('totalPrice').value = formatRupiah(total);
+        }
+        
+        // Filter services by category
+        function filterServices(category) {
+            document.querySelectorAll('.category-item').forEach(item => item.classList.remove('active'));
+            event.target.classList.add('active');
+            loadServices(category);
+        }
+        
+        // Search services
+        function searchServices() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (!keyword) {
+                displayServices(allServices);
+                return;
+            }
+            
+            const filtered = allServices.filter(s => 
+                s.name.toLowerCase().includes(keyword) || 
+                s.description.toLowerCase().includes(keyword)
+            );
+            
+            displayServices(filtered);
+        }
+        
+        // Submit order
+        async function submitOrder(e) {
+            e.preventDefault();
+            
+            if (!selectedService) {
+                alert('Pilih layanan terlebih dahulu!');
+                return;
+            }
+            
+            const orderData = {
+                serviceId: selectedService.id,
+                link: document.getElementById('link').value,
+                quantity: document.getElementById('quantity').value
+            };
+            
+            try {
+                const res = await fetch(`${API_URL}/api/order`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('✅ Order berhasil dibuat!');
+                    loadUserData();
+                    loadOrders();
+                    document.getElementById('orderForm').reset();
+                    selectedService = null;
+                } else {
+                    alert('❌ ' + (data.error || 'Order gagal'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        // Load orders
+        async function loadOrders() {
+            try {
+                const res = await fetch(`${API_URL}/api/orders`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const orders = await res.json();
+                
+                const container = document.getElementById('ordersList');
+                
+                if (orders.length === 0) {
+                    container.innerHTML = '<p class="no-data">Belum ada order</p>';
+                    return;
+                }
+                
+                container.innerHTML = orders.slice(0, 10).map(order => `
+                    <div class="order-item">
+                        <div class="order-service">${order.serviceName}</div>
+                        <div class="order-details">${order.quantity} x ${formatRupiah(order.price)}</div>
+                        <div class="order-status status-${order.status.toLowerCase()}">${order.status}</div>
+                        <div class="order-date">${new Date(order.createdAt).toLocaleDateString('id-ID')}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        // Deposit functions
+        function showDepositModal() {
+            document.getElementById('depositModal').style.display = 'flex';
+        }
+        
+        function closeDepositModal() {
+            document.getElementById('depositModal').style.display = 'none';
+        }
+        
+        async function submitDeposit() {
+            const amount = document.getElementById('depositAmount').value;
+            
+            if (!amount || amount < 10000) {
+                alert('Minimal deposit Rp 10.000');
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_URL}/api/deposit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ amount })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    window.open(data.paymentUrl, '_blank');
+                    closeDepositModal();
+                } else {
+                    alert(data.error || 'Deposit gagal');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        // Format currency
+        function formatRupiah(amount) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+        
+        // Logout
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+        
+        // Initial load
+        loadUserData();
+        loadCategories();
+        loadServices();
+        loadOrders();
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('depositModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
